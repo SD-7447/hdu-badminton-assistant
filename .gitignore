@@ -1,0 +1,15 @@
+.venv/
+__pycache__/
+profile.json
+profile.tmp
+run-journal.json
+run-journal.tmp
+logs/
+api-profile.json
+run-api-config.json
+run-api-journal.json
+*.json.tmp
+.venue-api.lock
+desktop/node_modules/
+desktop/out/
+desktop/.bundle/

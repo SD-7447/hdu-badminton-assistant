@@ -1,0 +1,3 @@
+# API assistant uses the Python standard library only.
+# Pillow is retained for the archived visual implementation and its tests.
+Pillow==11.3.0

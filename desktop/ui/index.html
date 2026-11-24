@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>杭电羽毛球助手</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="court-order.js" defer></script>
+  <script src="date-time.js" defer></script>
+  <script src="renderer.js" defer></script>
+</head>
+<body>
+  <header class="masthead">
+    <div class="brand">
+      <img src="mark.svg" alt="" width="38" height="38">
+      <div><strong>杭电羽毛球助手</strong><span>综合馆羽毛球</span></div>
+    </div>
+    <output class="badge" id="phase" data-tone="neutral" role="status">正在载入</output>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div>
+        <p class="eyebrow" id="hero-title">打球日期</p>
+        <strong class="hero-date" id="hero-date">—</strong>
+        <span class="weekday" id="weekday"></span>
+      </div>
+      <div class="release">
+        <span class="eyebrow">放号时间 · 北京</span>
+        <strong id="release">—</strong>
+      </div>
+      <div class="counter">
+        <span class="eyebrow" id="counter-label">距放号</span>
+        <output id="countdown" aria-label="距放号">—</output>
+      </div>
+    </section>
+    <section class="panel venue-bulletin" aria-labelledby="bulletin-title">
+      <div class="panel-heading"><h2 id="bulletin-title">场馆公告</h2><button type="button" class="quiet" id="notice-refresh" disabled>刷新公告</button></div>
+      <p id="bulletin-body">正在读取公告…</p>
+      <button type="button" id="notice-expand" class="text-button" aria-controls="bulletin-body" aria-expanded="false" hidden>展开全文</button>
+      <span class="hint" id="notice-meta" role="status"></span>
+    </section>
+    <div class="workspace">
+      <section class="panel settings" aria-labelledby="settings-title">
+        <div class="panel-heading"><h1 id="settings-title">预约设置</h1><button type="button" class="quiet" id="save" disabled>保存配置</button></div>
+        <form id="configuration">
+          <fieldset id="settings-fields" disabled>
+            <div class="field-pair">
+              <div class="picker-field"><span id="target-date-label">预约日期</span>
+                <input id="target_date" type="hidden">
+                <button type="button" class="picker-trigger" data-picker="target_date" aria-labelledby="target-date-label target-date-value" aria-haspopup="dialog" aria-controls="date-time-picker" aria-expanded="false" id="target-date-value">—</button>
+              </div>
+              <div class="picker-field"><span id="earliest-start-label">最早开始</span>
+                <input id="earliest_start" type="hidden">
+                <button type="button" class="picker-trigger" data-picker="earliest_start" aria-labelledby="earliest-start-label earliest-start-value" aria-haspopup="dialog" aria-controls="date-time-picker" aria-expanded="false" id="earliest-start-value">—</button>
+              </div>
+            </div>
+            <div class="field-pair">
+              <label>最短时长（分钟）<input id="min_minutes" type="number" min="60" max="120" required></label>
+              <label>最长时长（分钟）<input id="max_minutes" type="number" min="60" max="120" required></label>
+            </div>
+            <div class="court-label">
+              <span id="court-title">场地优先顺序</span>
+              <button type="button" class="text-button" id="participation-toggle" aria-controls="participants" aria-expanded="false">参与场地</button>
+            </div>
+            <ol id="courts" class="courts" aria-labelledby="court-title" aria-describedby="court-help"></ol>
+            <p id="court-help" class="hint">拖动排序。同等时长按从左到右、从上到下选场。</p>
+            <span class="sr-only" id="court-keys">空格抓取，方向键移动，再按空格确认，Esc 取消。</span>
+            <span class="sr-only" id="court-feedback" role="status"></span>
+            <div id="participants" class="participants" role="group" aria-label="参与预约的场地" hidden></div>
+            <details class="advanced">
+              <summary>高级设置</summary>
+              <div class="field-pair">
+                <label>提前几天放号<input id="release_days_before" type="number" min="0" max="30" required></label>
+                <div class="picker-field"><span id="release-time-label">每日放号时间</span>
+                  <input id="release_time" type="hidden">
+                  <button type="button" class="picker-trigger" data-picker="release_time" aria-labelledby="release-time-label release-time-value" aria-haspopup="dialog" aria-controls="date-time-picker" aria-expanded="false" id="release-time-value">—</button>
+                </div>
+              </div>
+              <div class="picker-field"><span id="release-override-label">手动覆盖放号时间</span>
+                <input id="release_override" type="hidden">
+                <button type="button" class="picker-trigger" data-picker="release_override" aria-labelledby="release-override-label release-override-value" aria-haspopup="dialog" aria-controls="date-time-picker" aria-expanded="false" id="release-override-value">未设置</button>
+              </div>
+              <label class="check"><input id="auto_refresh" type="checkbox">放号前 3 分钟重启钉钉并验证登录</label>
+            </details>
+          </fieldset>
+        </form>
+      </section>
+      <section class="panel monitor" aria-labelledby="monitor-title">
+        <div class="panel-heading">
+          <div><h2 id="monitor-title">运行状态</h2></div>
+          <div><button type="button" class="quiet" id="clear-status" disabled>清空显示</button>
+          <button type="button" class="quiet" id="refresh" disabled>检查登录</button>
+          <button type="button" class="quiet" id="restart-dingtalk" title="退出钉钉客户端并重新进入场馆速约" disabled>重启钉钉</button></div>
+        </div>
+        <div id="notice" class="notice" data-tone="neutral" role="status">
+          <div class="notice-dot" aria-hidden="true"></div>
+          <div><strong id="notice-title">正在载入配置</strong><p id="notice-message">正在连接预约后台。</p></div>
+        </div>
+        <p class="hint" id="login-status" role="status">登录状态尚未验证</p>
+        <button type="button" class="text-button" id="open-venue-login" disabled>打开场馆登录</button>
+        <button type="button" class="quiet" id="retry-login" hidden>已登录，重新验证</button>
+        <p class="hint" id="login-entry-feedback" role="status"></p>
+        <div class="candidate-heading"><h3>候选时段</h3><span class="candidate-meta" id="candidate-count"></span></div>
+        <div class="candidate-area">
+          <table id="candidate-table" hidden>
+            <thead><tr><th scope="col">顺位</th><th scope="col">场地</th><th scope="col">时段</th><th scope="col">时长</th></tr></thead>
+            <tbody id="candidates"></tbody>
+          </table>
+          <div id="empty" class="empty">运行只读演练查看候选时段</div>
+        </div>
+        <details class="logs" id="logs">
+          <summary>运行日志 <span id="log-count"></span></summary>
+          <ol id="log-entries"><li>任务启动后显示运行记录。</li></ol>
+        </details>
+      </section>
+    </div>
+    <footer class="actions">
+      <p id="actions-hint">请保持钉钉登录</p>
+      <div>
+        <button type="button" class="quiet" id="preview" disabled>只读演练</button>
+        <button type="button" class="primary" id="start" disabled>启动定时抢约</button>
+        <button type="button" class="stop" id="stop" hidden>停止任务</button>
+      </div>
+    </footer>
+  </main>
+  <div id="date-time-picker" class="picker" popover="auto" role="dialog" aria-labelledby="picker-heading"></div>
+</body>
+</html>
